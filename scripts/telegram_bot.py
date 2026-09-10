@@ -8,6 +8,7 @@ Usage:
 """
 
 import json
+from html import escape
 import os
 import sys
 import time
@@ -67,17 +68,17 @@ def format_order_alert(order: Dict[str, Any]) -> str:
     try:
         items = json.loads(order.get("items", "[]")) if isinstance(order.get("items"), str) else order.get("items", [])
         for item in items:
-            name = item.get("productName", "Unknown")
-            qty = item.get("quantity", 1)
+            name = escape(str(item.get("productName", "Unknown")))
+            qty = escape(str(item.get("quantity", 1)))
             price = item.get("initialPrice", 0)
             items_str += f"  - {name} x{qty} ({price:,.0f} KZT)\n"
     except (json.JSONDecodeError, TypeError):
         items_str = "  (unable to parse items)\n"
 
     total = float(order.get("total_amount", 0))
-    city = order.get("city", "N/A")
-    name = f"{order.get('first_name', '')} {order.get('last_name', '')}".strip()
-    utm = order.get("utm_source", "N/A")
+    city = escape(str(order.get("city", "N/A")))
+    name = escape(f"{order.get('first_name', '')} {order.get('last_name', '')}".strip())
+    utm = escape(str(order.get("utm_source", "N/A")))
 
     return (
         f"<b>NEW HIGH-VALUE ORDER!</b>\n\n"
@@ -86,7 +87,7 @@ def format_order_alert(order: Dict[str, Any]) -> str:
         f"Total: <b>{total:,.0f} KZT</b>\n"
         f"UTM: {utm}\n\n"
         f"Items:\n{items_str}\n"
-        f"Order ID: {order.get('retailcrm_id', 'N/A')}"
+        f"Order ID: {escape(str(order.get('retailcrm_id', 'N/A')))}"
     )
 
 

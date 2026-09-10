@@ -66,6 +66,22 @@ cd scripts
 python telegram_bot.py
 ```
 
+## Проверки без внешних сервисов
+
+Из корня репозитория:
+
+```bash
+python -m unittest discover -s tests -p 'test_*.py' -v
+cd dashboard
+npm ci --include=dev
+npm run build
+```
+
+Тесты используют только синтетические заказы и заменяют загрузку `.env`,
+HTTP-запросы и клиент Supabase. Они не отправляют сообщения и не меняют базу.
+Для сборки нужны devDependencies (в том числе TypeScript), даже если
+`NODE_ENV=production`. `npm run lint` пока требует первоначальной настройки ESLint.
+
 ## Какие промпты давал AI-ассистенту (Kilo Code)
 
 ### Промпт 1: Каркас проекта

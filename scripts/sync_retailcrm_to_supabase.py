@@ -76,8 +76,11 @@ def calculate_total(order: Dict[str, Any]) -> float:
     """Calculate total order amount from items."""
     total = 0.0
     for item in order.get("items", []):
-        price = float(item.get("initialPrice", 0) or item.get("price", 0) or 0)
-        qty = int(item.get("quantity", 1))
+        raw_price = item.get("initialPrice")
+        if raw_price is None or raw_price == "":
+            raw_price = item.get("price", 0)
+        price = float(raw_price or 0)
+        qty = float(item.get("quantity", 1))
         total += price * qty
     return total
 
