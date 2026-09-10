@@ -72,14 +72,19 @@ def fetch_orders_from_retailcrm(page: int = 1, limit: int = 100) -> List[Dict[st
     return all_orders
 
 
+def item_unit_price(item: dict[str, Any]) -> float:
+    """Resolve the same effective unit price for totals and persisted items."""
+    raw_price = item.get("initialPrice")
+    if raw_price is None or raw_price == "":
+        raw_price = item.get("price", 0)
+    return float(raw_price or 0)
+
+
 def calculate_total(order: Dict[str, Any]) -> float:
     """Calculate total order amount from items."""
     total = 0.0
     for item in order.get("items", []):
-        raw_price = item.get("initialPrice")
-        if raw_price is None or raw_price == "":
-            raw_price = item.get("price", 0)
-        price = float(raw_price or 0)
+        price = item_unit_price(item)
         qty = float(item.get("quantity", 1))
         total += price * qty
     return total
@@ -98,7 +103,7 @@ def transform_order(order: Dict[str, Any]) -> Dict[str, Any]:
         items_clean.append({
             "productName": item.get("offer", {}).get("displayName", item.get("productName", "")),
             "quantity": item.get("quantity", 1),
-            "initialPrice": float(item.get("initialPrice", 0) or 0),
+            "initialPrice": item_unit_price(item),
         })
 
     custom_fields = order.get("customFields", {})

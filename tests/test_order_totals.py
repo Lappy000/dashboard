@@ -1,6 +1,7 @@
 """Pure order transformation tests with configuration/network replaced at import."""
 
 import importlib.util
+import json
 import os
 import sys
 import unittest
@@ -50,6 +51,27 @@ class OrderTotalsTests(unittest.TestCase):
         self.assertEqual(sync.calculate_total({
             "items": [{"price": "100", "quantity": "1.5"}]
         }), 150)
+
+    def test_transformed_item_price_matches_fallback_used_in_total(self):
+        sync = load_sync()
+        row = sync.transform_order({
+            "id": "synthetic-order",
+            "items": [{"price": "100", "quantity": 1.5}],
+        })
+        items = json.loads(row["items"])
+        self.assertEqual(items[0]["initialPrice"], 100)
+        self.assertEqual(items[0]["quantity"], 1.5)
+        self.assertEqual(row["total_amount"], 150)
+
+    def test_transformed_item_and_total_use_the_same_price_precedence(self):
+        for initial_price, expected in [(None, 100), ("", 100), (0, 0), ("0", 0), ("25.5", 25.5)]:
+            with self.subTest(initial_price=initial_price):
+                row = load_sync().transform_order({
+                    "items": [{"initialPrice": initial_price, "price": 100, "quantity": 2}],
+                })
+                item = json.loads(row["items"])[0]
+                self.assertEqual(item["initialPrice"], expected)
+                self.assertEqual(row["total_amount"], expected * 2)
 
     def test_empty_order_total_is_zero(self):
         self.assertEqual(load_sync().calculate_total({}), 0)
